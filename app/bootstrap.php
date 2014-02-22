@@ -1,6 +1,7 @@
 <?php
 
 define("APP_PATH", dirname(__FILE__));
+define("BASE_URL", "http://shrinkr.loc/?url=");
 
 $classes = scandir(APP_PATH . '/class/');
 
