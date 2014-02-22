@@ -37,7 +37,7 @@ class Shrinkr {
 
             $this->dom = new DOMDocument();
             $this->dom->preserveWhiteSpace = false;
-            $this->dom->loadHTML($html);
+            @$this->dom->loadHTML($html);
             $this->xpath = new DOMXPath($this->dom);
         }
     }
@@ -45,12 +45,20 @@ class Shrinkr {
     function loadAdBlockFilters()
     {
         $easylist = new Easylist();
-        $this->adBlockFilters = $easylist->loadList();
+        $this->adBlockFilters = array(
+            ['block'] = $easylist->easylistBlock,
+            ['hide'] = $easylist->easylistHide
+        );
     }
 
     function removeAds()
     {
 
+    }
+
+    function show()
+    {
+        echo $this->dom->saveHtml();
     }
 
 }
