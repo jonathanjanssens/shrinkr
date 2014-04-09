@@ -1,13 +1,16 @@
 #!/usr/bin/env python
 
-from bs4 import BeautifulSoup, Comment
+from Evaluate import Evaluate
+from bs4 import BeautifulSoup, Comment, NavigableString
+from collections import OrderedDict
 import urllib2
 
 class Shrinkr:
 
     def __init__(self):
-        self.garbageTags = ['script', 'style', 'noscript', 'form', 'input']
-        self.containers = []
+        self.garbageTags = ['script', 'style', 'noscript', 'form', 'input', 'head']
+        self.articleContainer = None
+        self.containers = {}
 
     def read(self, url):
         usock = urllib2.urlopen(url)
@@ -26,13 +29,26 @@ class Shrinkr:
         self.fixRelativeUrls()
 
     def extractArcicle(self):
-        for tag in self.soup.find_all():
+        # create some class to queue the evaluations or pass the tag like evaluate.asXX(tag)
+        for tag in self.soup.find_all()[::-1]:
+            evaluate = Evaluate()
             if tag.name == 'p':
-                # is a paragraph, let's do some sheeite
-                print tag
+                evaluate.asParagraph(tag)
             else:
-                # it's not a paragraph, but it might be...
-                return None
+                for child in tag.children:
+                    if isinstance(child, NavigableString):
+                        text = unicode(child).strip()
+                        if len(text) > 10:
+                            evaluate.asParagraph(child)
+                            continue
+                    else:
+                        evaluate.asContainer(child)
+                evaluate.asContainer(tag)
+                self.containers[tag] = evaluate.score
+        self.containers = OrderedDict(sorted(self.containers.items(), key=lambda t: t[1])) # sort based on value (ASC)
+        
+        print self.containers.popitem()
+
 
     def fixRelativeUrls(self):
         return 'lol'
