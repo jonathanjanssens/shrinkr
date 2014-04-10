@@ -3,6 +3,7 @@
 from Evaluate import Evaluate
 from bs4 import BeautifulSoup, Comment, NavigableString
 from collections import OrderedDict
+import argparse
 import urllib2
 
 class Shrinkr:
@@ -11,13 +12,20 @@ class Shrinkr:
         self.garbageTags = ['script', 'style', 'noscript', 'form', 'input', 'head']
         self.articleContainer = None
         self.containers = {}
+        self.url = ''
 
     def read(self, url):
-        usock = urllib2.urlopen(url)
+        self.url = url
+        self.fixUrl()
+        usock = urllib2.urlopen(self.url)
         html = usock.read()
         usock.close()
         self.soup = BeautifulSoup(html)
         self.clean()
+
+    def fixUrl(self):
+        if self.url[:4] != 'http':
+            self.url = 'http://%s' % (self.url)
 
     def clean(self):
         comments = self.soup.find_all(text=lambda text:isinstance(text, Comment))
@@ -59,6 +67,12 @@ class Shrinkr:
     def printText(self):
         print(self.soup.get_text())
 
+parser = argparse.ArgumentParser()
+parser.add_argument('url', help='url for html extraction')
+parser.add_argument('-d', '--debug', help='enable debug mode')
+args = parser.parse_args()
+
 s = Shrinkr()
-s.read('http://www.bbc.co.uk/news/uk-politics-26843996')
+#s.read('http://www.bbc.co.uk/news/uk-politics-26843996')
+s.read(args.url)
 s.extractArcicle()
