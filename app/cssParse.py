@@ -4,6 +4,7 @@ class cssParser:
 
     def __init__(self):
         self.cssObject = {}
+        self.cssString = ''
         self.removeRules = ['width', 'float', 'position', 'height']
         self.logFile = open('logs/cssParser.log', 'w')
         self.logFile.write('%s: Start\n' % datetime.datetime.utcnow())
@@ -39,6 +40,7 @@ class cssParser:
                 if key in self.removeRules:
                     self.logFile.write('%s: Deleted %s { %s:%s } \n' % (datetime.datetime.utcnow(), selector, key, value))
                     del rules[key]
+        self.out()
         return self
 
     def out(self):
@@ -46,5 +48,14 @@ class cssParser:
         self.logFile.write('%s: End\n' % datetime.datetime.utcnow())
         self.logFile.close()
 
+    def getString(self):
+        return self.cssString
+
+    def toCssString(self):
+        for key, value in self.cssObject.items():
+            self.cssString += '%s%s' % (key, value)
+
 cp = cssParser()
-cp.loadFile('../tests/test.css').minify().objectify().fix().out()
+cp.loadFile('../tests/test.css').minify().objectify().fix()
+cp.toCssString()
+print cp.getString()
