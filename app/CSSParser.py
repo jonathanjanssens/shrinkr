@@ -1,6 +1,7 @@
 import sys, re, datetime
+import urllib2
 
-class cssParser:
+class CSSParser:
 
     def __init__(self):
         self.cssObject = {}
@@ -12,6 +13,13 @@ class cssParser:
     def loadFile(self, fileName):
         with open(fileName, 'r') as file:
             self.css = file.read().replace('\n', '')
+        return self
+
+    def loadUrl(self, url):
+        usock = urllib2.urlopen(url)
+        css = usock.read()
+        usock.close()
+        self.css = css
         return self
 
     def minify(self):
@@ -54,8 +62,3 @@ class cssParser:
     def toCssString(self):
         for key, value in self.cssObject.items():
             self.cssString += '%s%s' % (key, value)
-
-cp = cssParser()
-cp.loadFile('../tests/test.css').minify().objectify().fix()
-cp.toCssString()
-print cp.getString()

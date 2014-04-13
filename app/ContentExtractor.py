@@ -8,7 +8,7 @@ from collections import OrderedDict
 from urlparse import urlparse
 import urllib2
 
-class Shrinkr:
+class ContentExtractor:
 
     def __init__(self, extractorUrl=None):
         self.garbageTags = ['script', 'style', 'noscript', 'form', 'input', 'head']
@@ -61,7 +61,7 @@ class Shrinkr:
         self.articleContainer = self.containers.popitem()[0]
 
     def getExtractedArticle(self):
-        return self.articleContainer
+        return unicode.join(u'\n',map(unicode,self.articleContainer))
 
     def getExtractedArticleText(self):
         return self.articleContainer.get_text()
@@ -79,22 +79,22 @@ class Shrinkr:
         for a in self.soup.find_all('a', href=True):
             a['href'] = '%s%s' % (self.extractorUrl, a['href'])
 
-parser = argparse.ArgumentParser()
-parser.add_argument('url', help='url for html extraction')
-parser.add_argument('-e', '--extractorUrl', help='define extractor url', type=str, default=False)
-parser.add_argument('-p', '--printHTML', help='print out article HTML after extraction', action='store_true')
-parser.add_argument('-t', '--printText', help='print out article text only after extraction', action='store_true')
-parser.add_argument('-d', '--debug', help='enable debug mode', action='store_true')
-args = parser.parse_args()
+# parser = argparse.ArgumentParser()
+# parser.add_argument('url', help='url for html extraction')
+# parser.add_argument('-e', '--extractorUrl', help='define extractor url', type=str, default=False)
+# parser.add_argument('-p', '--printHTML', help='print out article HTML after extraction', action='store_true')
+# parser.add_argument('-t', '--printText', help='print out article text only after extraction', action='store_true')
+# parser.add_argument('-d', '--debug', help='enable debug mode', action='store_true')
+# args = parser.parse_args()
 
-s = Shrinkr(extractorUrl='http://something.loc/?extract=')
-s.read(args.url)
-if args.extractorUrl != False:
-    s.extractLinkedArticles()
+# s = Shrinkr(extractorUrl='http://something.loc/?extract=')
+# s.read(args.url)
+# if args.extractorUrl != False:
+#     s.extractLinkedArticles()
 
-s.extractArcicle()
+# s.extractArcicle()
 
-if args.printHTML:
-    print s.getExtractedArticle()
-if args.printText:
-    print s.getExtractedArticleText()
+# if args.printHTML:
+#     print s.getExtractedArticle()
+# if args.printText:
+#     print s.getExtractedArticleText()
