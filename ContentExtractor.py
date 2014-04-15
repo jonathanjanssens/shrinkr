@@ -7,6 +7,7 @@ from bs4 import BeautifulSoup, Comment, NavigableString
 from collections import OrderedDict
 from urlparse import urlparse
 import urllib2
+import robotparser
 
 class ContentExtractor:
 
@@ -14,22 +15,29 @@ class ContentExtractor:
         self.garbageTags = ['script', 'style', 'noscript', 'form', 'input', 'head']
         self.articleContainer = None
         self.containers = {}
-        self.urlComponents = ''
         self.url = ''
         self.extractorUrl = extractorUrl
+        self.robotparser = robotparser.RobotFileParser()
+        self.userAgentString = 'Shrinkr/0.9 (http://shrinkr.jonathanjanssens.com/about.php)'
+        self.urlComponents = urlparse(self.url)
 
     def read(self, url):
         self.url = url
         self.fixUrl()
-        usock = urllib2.urlopen(self.url)
-        html = usock.read()
-        usock.close()
+        self.robotparser.set_url('%s://%s/robots.txt' % (self.urlComponents.scheme, self.urlComponents.netloc))
+        self.robotparser.read()
+        if self.robotparser.can_fetch(self.userAgentString, self.url) is False:
+            raise RuntimeError('Shrinkr is blocked by the robots.txt file for this site.')
+        opener = urllib2.build_opener()
+        opener.addheaders = [('User-agent', self.userAgentString)]
+        html = opener.open(self.url)
         self.soup = BeautifulSoup(html)
         self.clean()
 
     def fixUrl(self):
         if self.url[:4] != 'http':
             self.url = 'http://%s' % (self.url)
+        self.urlComponents = urlparse(self.url)
 
     def clean(self):
         comments = self.soup.find_all(text=lambda text:isinstance(text, Comment))
@@ -67,7 +75,6 @@ class ContentExtractor:
         return self.articleContainer.get_text()
 
     def fixRelativeUrls(self):
-        self.urlComponents = urlparse(self.url)
         for a in self.soup.find_all('a', href=True):
             if a['href'][:4] != 'http':
                 if a['href'][:1] == '#' or a['href'][:1] == '?':
@@ -79,22 +86,22 @@ class ContentExtractor:
         for a in self.soup.find_all('a', href=True):
             a['href'] = '%s%s' % (self.extractorUrl, a['href'])
 
-# parser = argparse.ArgumentParser()
-# parser.add_argument('url', help='url for html extraction')
-# parser.add_argument('-e', '--extractorUrl', help='define extractor url', type=str, default=False)
-# parser.add_argument('-p', '--printHTML', help='print out article HTML after extraction', action='store_true')
-# parser.add_argument('-t', '--printText', help='print out article text only after extraction', action='store_true')
-# parser.add_argument('-d', '--debug', help='enable debug mode', action='store_true')
-# args = parser.parse_args()
+parser = argparse.ArgumentParser()
+parser.add_argument('url', help='url for html extraction')
+parser.add_argument('-e', '--extractorUrl', help='define extractor url', type=str, default=False)
+parser.add_argument('-p', '--printHTML', help='print out article HTML after extraction', action='store_true')
+parser.add_argument('-t', '--printText', help='print out article text only after extraction', action='store_true')
+parser.add_argument('-d', '--debug', help='enable debug mode', action='store_true')
+args = parser.parse_args()
 
-# s = Shrinkr(extractorUrl='http://something.loc/?extract=')
-# s.read(args.url)
-# if args.extractorUrl != False:
-#     s.extractLinkedArticles()
+s = ContentExtractor(extractorUrl='http://something.loc/?extract=')
+s.read(args.url)
+if args.extractorUrl != False:
+    s.extractLinkedArticles()
 
-# s.extractArcicle()
+s.extractArcicle()
 
-# if args.printHTML:
-#     print s.getExtractedArticle()
-# if args.printText:
-#     print s.getExtractedArticleText()
+if args.printHTML:
+    print s.getExtractedArticle()
+if args.printText:
+    print s.getExtractedArticleText()

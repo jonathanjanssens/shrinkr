@@ -8,13 +8,14 @@ class Evaluate:
         self.textLength = 0
         self.childTags = 0
         self.score = 0
+        self.text = ''
         self.calculateTextLength()
         self.countChildren()
         self.calculateTextDensity()
 
     def calculateTextLength(self):
-        text = unicode(self.element).strip()
-        self.textLength = len(text)
+        self.text = unicode(self.element).strip()
+        self.textLength = len(self.text)
         return self.textLength
 
     def countChildren(self):
@@ -47,4 +48,5 @@ class Evaluate:
         self.element = tag
         self.load()
         self.score = self.textDensity
+        self.score += (self.text.count(',')*40)
         tag.score = self.textDensity
