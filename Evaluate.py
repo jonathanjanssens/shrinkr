@@ -1,7 +1,7 @@
 class Evaluate:
 
     def __init__(self):
-        self.tagNameBonuses = {'p': 50, 'div': -100, 'h1': 40, 'h2': 50, 'h3': 40, 'h4': 30 }
+        self.tagNameBonuses = {'p': 50, 'h1': 40, 'h2': 50, 'h3': 40, 'h4': 30, 'div': -100}
 
     def load(self):
         self.textDensity = 0.0
@@ -48,5 +48,10 @@ class Evaluate:
         self.element = tag
         self.load()
         self.score = self.textDensity
-        self.score += (self.text.count(',')*40)
-        tag.score = self.textDensity
+        self.score += (self.text.count(',')*30)
+        try:
+            if tag.name in self.tagNameBonuses:
+                self.score += self.tagNameBonuses[tag.name]
+        except AttributeError:
+            pass
+        tag.score = self.score

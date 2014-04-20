@@ -86,6 +86,10 @@ class ContentExtractor:
         for a in self.soup.find_all('a', href=True):
             a['href'] = '%s%s' % (self.extractorUrl, a['href'])
 
+    def debugOutput(self):
+        for k, v in self.containers.items():
+            print k.name, k.attrs, v
+
 parser = argparse.ArgumentParser()
 parser.add_argument('url', help='url for html extraction')
 parser.add_argument('-e', '--extractorUrl', help='define extractor url', type=str, default=False)
@@ -96,10 +100,13 @@ args = parser.parse_args()
 
 s = ContentExtractor(extractorUrl='http://something.loc/?extract=')
 s.read(args.url)
-if args.extractorUrl != False:
+if args.extractorUrl:
     s.extractLinkedArticles()
 
 s.extractArcicle()
+
+if args.debug:
+    print s.debugOutput()
 
 if args.printHTML:
     print s.getExtractedArticle()
