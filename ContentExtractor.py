@@ -3,6 +3,7 @@
 import argparse
 
 from Evaluate import Evaluate
+from Menu import Menu
 from bs4 import BeautifulSoup, Comment, NavigableString
 from collections import OrderedDict
 from urlparse import urlparse
@@ -21,6 +22,7 @@ class ContentExtractor:
         self.userAgentString = 'Shrinkr/0.9 (http://shrinkr.jonathanjanssens.com/about.php)'
         self.urlComponents = urlparse(self.url)
         self.head = ''
+        self.allLinks = []
 
     def read(self, url):
         self.url = url
@@ -40,6 +42,7 @@ class ContentExtractor:
             self.url = 'http://%s' % (self.url)
         self.urlComponents = urlparse(self.url)
 
+
     def clean(self):
         comments = self.soup.find_all(text=lambda text:isinstance(text, Comment))
         for comment in comments:
@@ -48,7 +51,15 @@ class ContentExtractor:
             for element in self.soup.find_all(tag):
                 element.decompose()
         self.head = self.soup.find('head').extract()
+        self.allLinks = self.soup.find_all('a', href=True)
         self.fixRelativeUrls()
+
+    def makeMenu(self):
+        self.menu = Menu(self.allLinks, self.urlComponents.netloc, extractorUrl=self.extractorUrl)
+        self.menu.sortLinks()
+        self.menuHTML = self.menu.make()
+        with open('tpl/controls.tpl', 'r') as html:
+            self.controlsHTML = html.read().replace('{{ orginal_url }}', self.url)
 
     def extractArticle(self):
         if self.extractorUrl is not None:
@@ -72,8 +83,17 @@ class ContentExtractor:
         
         self.articleContainer = self.containers.popitem()[0]
 
-    def getExtractedArticle(self, prependHead=False):
+    def getExtractedArticle(self, prependHead=True):
         article = ''
+        # append menu and controls to self.articleContainer
+        self.articleContainer.insert(1, self.menuHTML)
+        self.articleContainer.insert(2, self.controlsHTML)
+        # append js and the end and css to self.head
+        with open('static/shrinkr.css', 'r') as css:
+            self.head.insert(2, '<style>%s</style>' % css.read())
+        with open('static/shrinkr.js', 'r') as js:
+            self.articleContainer.insert(len(self.articleContainer.contents), '<script>%s</script>' % js.read())
+        #
         if prependHead is True:
             article = unicode.join(u'\n',map(unicode,self.head))
         article += unicode.join(u'\n',map(unicode,self.articleContainer))
@@ -88,7 +108,7 @@ class ContentExtractor:
                 if a['href'][:1] == '#' or a['href'][:1] == '?':
                     a['href'] = '%s://%s%s%s' % (self.urlComponents.scheme, self.urlComponents.netloc, self.urlComponents.path, a['href'])
                 else:
-                    a['href'] = '%s://%s%s' % (self.urlComponents.scheme, self.urlComponents.netloc, a['href'])
+                    a['href'] = '%s://%s/%s' % (self.urlComponents.scheme, self.urlComponents.netloc, a['href'])
 
     def extractLinkedArticles(self):
         for a in self.soup.find_all('a', href=True):
@@ -109,10 +129,9 @@ if __name__ == '__main__':
     
     s = ContentExtractor(extractorUrl='http://something.loc/?extract=')
     s.read(args.url)
-    if args.extractorUrl:
-        s.extractLinkedArticles()
     
-    s.extractArcicle()
+    s.makeMenu()
+    s.extractArticle()
     
     if args.debug:
         print s.debugOutput()
