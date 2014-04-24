@@ -34,9 +34,6 @@ body {
 #shrinkr-controls a:first-of-type {
     border-right: 2px solid black;
 }
-#shrinkr-controls li {
-    margin-bottom: 4px;
-}
 
 #shrinkr-menu {
     background: #F59611;
@@ -47,10 +44,33 @@ body {
 #shrinkr-menu a {
     color: white;
     padding: 10px;
-    background: rgba(0, 0, 0, 0.2);
+    background: rgba(0, 0, 0, 0.1);
+}
+#shrinkr-menu ul, #shrinkr-menu li {
+    background: none !important;
+    list-style: none !important;
+}
+#shrinkr-menu li {
+    margin-bottom: 4px;
+}
+#shrinkr-menu h3 {
+    margin: 1em 0;
 }
 
 #shrinkr-menu * {
     display: block !important;
     position: relative !important;
+}
+
+#shrinkr-form input {
+    display: block !important;
+    width: 100% !important;
+    height: 50px !important;
+    margin-bottom: 10px !important;
+    border: 1px solid #C2C2C2 !important;
+    padding: 10px !important;
+    border-radius: 3px !important;
+}
+#shrinkr-form input:focus {
+    background: white !important;
 }

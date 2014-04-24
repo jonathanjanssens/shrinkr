@@ -1,3 +1,8 @@
+#
+# TODO:
+#   * Fix links going to external origin when they start with www or http
+#
+
 from urlparse import urlparse
 
 class Menu:
@@ -40,4 +45,9 @@ class Menu:
                 temp = "<li><a href='%s'>%s</a></li>" % (a['href'], a.get_text())
                 external += temp
             self.menuHTML = html.read().replace('{{ internal_origin_links }}', internal).replace('{{ external_origin_links }}', external)
-            return self.menuHTML
+        if self.extractorUrl is not None:
+            with open('tpl/form.tpl', 'r') as form:
+                self.menuHTML = self.menuHTML.replace('{{ shrinkr_form }}', form.read().replace('{{ extractor_url }}', self.extractorUrl))
+        else:
+            self.menuHTML = self.menuHTML.replace('{{ shrinkr_form }}', '')
+        return self.menuHTML
