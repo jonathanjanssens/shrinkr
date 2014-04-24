@@ -12,7 +12,7 @@ import robotparser
 class ContentExtractor:
 
     def __init__(self, extractorUrl=None):
-        self.garbageTags = ['script', 'style', 'noscript', 'form', 'input', 'head']
+        self.garbageTags = ['script', 'style', 'noscript', 'form', 'input']
         self.articleContainer = None
         self.containers = {}
         self.url = ''
@@ -20,6 +20,7 @@ class ContentExtractor:
         self.robotparser = robotparser.RobotFileParser()
         self.userAgentString = 'Shrinkr/0.9 (http://shrinkr.jonathanjanssens.com/about.php)'
         self.urlComponents = urlparse(self.url)
+        self.head = ''
 
     def read(self, url):
         self.url = url
@@ -46,9 +47,12 @@ class ContentExtractor:
         for tag in self.garbageTags:
             for element in self.soup.find_all(tag):
                 element.decompose()
+        self.head = self.soup.find('head').extract()
         self.fixRelativeUrls()
 
-    def extractArcicle(self):
+    def extractArticle(self):
+        if self.extractorUrl is not None:
+            self.extractLinkedArticles()
         for tag in self.soup.find_all()[::-1]:
             evaluate = Evaluate()
             if tag.name == 'p':
@@ -68,8 +72,12 @@ class ContentExtractor:
         
         self.articleContainer = self.containers.popitem()[0]
 
-    def getExtractedArticle(self):
-        return unicode.join(u'\n',map(unicode,self.articleContainer))
+    def getExtractedArticle(self, prependHead=False):
+        article = ''
+        if prependHead is True:
+            article = unicode.join(u'\n',map(unicode,self.head))
+        article += unicode.join(u'\n',map(unicode,self.articleContainer))
+        return article
 
     def getExtractedArticleText(self):
         return self.articleContainer.get_text()
@@ -90,25 +98,26 @@ class ContentExtractor:
         for k, v in self.containers.items():
             print k.name, k.attrs, v
 
-parser = argparse.ArgumentParser()
-parser.add_argument('url', help='url for html extraction')
-parser.add_argument('-e', '--extractorUrl', help='define extractor url', type=str, default=False)
-parser.add_argument('-p', '--printHTML', help='print out article HTML after extraction', action='store_true')
-parser.add_argument('-t', '--printText', help='print out article text only after extraction', action='store_true')
-parser.add_argument('-d', '--debug', help='enable debug mode', action='store_true')
-args = parser.parse_args()
-
-s = ContentExtractor(extractorUrl='http://something.loc/?extract=')
-s.read(args.url)
-if args.extractorUrl:
-    s.extractLinkedArticles()
-
-s.extractArcicle()
-
-if args.debug:
-    print s.debugOutput()
-
-if args.printHTML:
-    print s.getExtractedArticle()
-if args.printText:
-    print s.getExtractedArticleText()
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser()
+    parser.add_argument('url', help='url for html extraction')
+    parser.add_argument('-e', '--extractorUrl', help='define extractor url', type=str, default=False)
+    parser.add_argument('-p', '--printHTML', help='print out article HTML after extraction', action='store_true')
+    parser.add_argument('-t', '--printText', help='print out article text only after extraction', action='store_true')
+    parser.add_argument('-d', '--debug', help='enable debug mode', action='store_true')
+    args = parser.parse_args()
+    
+    s = ContentExtractor(extractorUrl='http://something.loc/?extract=')
+    s.read(args.url)
+    if args.extractorUrl:
+        s.extractLinkedArticles()
+    
+    s.extractArcicle()
+    
+    if args.debug:
+        print s.debugOutput()
+    
+    if args.printHTML:
+        print s.getExtractedArticle()
+    if args.printText:
+        print s.getExtractedArticleText()
